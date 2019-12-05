@@ -28,7 +28,6 @@ def createTeam(firstIndex, secondIndex, isRed,
   team, initialized using firstIndex and secondIndex as their agent
   index numbers.  isRed is True if the red team is being created, and
   will be False if the blue team is being created.
-
   As a potentially helpful development aid, this function can take
   additional string-valued keyword arguments ("first" and "second" are
   such arguments in the case of this function), which will come from
@@ -51,9 +50,7 @@ class DefensiveAgent(CaptureAgent):
         CaptureAgent.registerInitialState(self, gameState)
         self.visited = []
        # if self.isRed:
-        self.enemystates = gameState.getBlueTeamIndices()
-        self.food = gameState.getBlueFood().asList()
-        for index in gameState.getRedTeamIndices():
+        for index in self.getTeam(gameState):
             if index != self.index:
                 self.friend = index
        # else:
@@ -64,7 +61,7 @@ class DefensiveAgent(CaptureAgent):
             #        self.friend = index
     def runAway(self, state):
         score = 0
-        for agent in self.enemystates:
+        for agent in self.getOpponents(state):
             if state.getAgentState(agent).scaredTimer == 0 and not state.getAgentState(agent).isPacman:
                 dist = self.getMazeDistance(state.getAgentPosition(self.index), state.getAgentPosition(agent))
                 score += dist * 1000000
@@ -75,8 +72,8 @@ class DefensiveAgent(CaptureAgent):
 
     def pacmanMoves(self, successor):
         score = 0
-        score -= len(self.food)
-        for food in self.food:
+        score -= len(self.getFood(successor).asList())
+        for food in self.getFood(successor).asList():
             dist = self.getMazeDistance(successor.getAgentPosition(self.index), food)
             score -= dist
             if dist <= 5:
@@ -84,10 +81,10 @@ class DefensiveAgent(CaptureAgent):
             if dist <= 2:
                 score += 100000
 
-        if successor.getAgentPosition(self.index) in self.food:
+        if successor.getAgentPosition(self.index) in self.getFood(successor).asList():
             score += 10000000000
         score += self.getMazeDistance(successor.getAgentPosition(self.index), successor.getAgentPosition(self.friend)) * 10
-        for agent in self.enemystates:
+        for agent in self.getOpponents(successor):
             if successor.getAgentState(agent).scaredTimer == 0:
                 dist = self.getMazeDistance(successor.getAgentPosition(self.index), successor.getAgentPosition(agent))
                 if dist <= 5:
@@ -108,7 +105,7 @@ class DefensiveAgent(CaptureAgent):
                 score -= 10000
             if successor.getAgentPosition(self.index) == successor.getInitialAgentPosition(self.index):
                 score -= 10000
-        for agent in self.enemystates:
+        for agent in self.getOpponents(successor):
             if successor.getAgentState(agent).isPacman:
                 dist = self.getMazeDistance(successor.getAgentPosition(self.index), successor.getAgentPosition(agent))
                 score -= dist
